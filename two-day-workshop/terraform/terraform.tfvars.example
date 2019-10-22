@@ -1,0 +1,41 @@
+////////////////////////////////
+// AWS Connection
+
+aws_region = "us-east-1"
+
+aws_profile = "default"
+
+aws_credentials_file = "~/.aws/credentials"
+
+aws_key_pair_file = "~/.ssh/id_rs"
+
+aws_key_pair_name = ""
+
+origin = ""
+
+////////////////////////////////
+// Object Tags
+
+tag_customer = ""
+
+tag_project = ""
+
+tag_name = ""
+
+tag_dept = ""
+
+tag_contact = "myemail@chef.io"
+
+tag_application = ""
+
+// number of student worksations to provision
+
+workstation_count = "3"
+
+// common password for all workstations, user chef
+
+workstation_user_password = "Cod3Can!"
+
+// VSCode Server WebUI password, usually same as workstation_user_password
+
+code_server_password = "Cod3Can!"

@@ -1,0 +1,15 @@
+# Terraform
+*.tfstate*
+*.tfvars
+*.terraform
+*.tfstate.backup
+
+# Vagrant
+*.vagrant
+
+# Habitat
+*.hart
+*results
+
+# Mac
+.DS_Store

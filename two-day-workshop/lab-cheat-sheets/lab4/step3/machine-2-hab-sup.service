@@ -1,0 +1,10 @@
+[Unit]
+Description=Habitat Supervisor
+
+[Service]
+ExecStart=/bin/hab sup run \
+                           --listen-ctl 0.0.0.0:9632 \
+                           --peer <machine-1-ip>
+
+[Install]
+WantedBy=default.target

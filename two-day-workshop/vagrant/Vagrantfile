@@ -1,0 +1,61 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "geerlingguy/centos7"
+  config.vm.synced_folder "../lab-cheat-sheets/", "/lab-cheat-sheets"
+  config.vm.network :public_network, bridge: "en0: Wi-Fi (AirPort)"
+  config.vm.base_mac = nil
+
+  config.vm.provision :shell,
+                      path: "../../scripts/provision.sh",
+                      env: { :HAB_USER_PASSWORD => ENV["HAB_USER_PASSWORD"] || "habworkshop" }
+
+  config.vm.provision :file,  source: "../../files/code-server.service", destination: "/tmp/code-server.service"
+
+  (1..2).each_with_index do |idx|
+    config.vm.define "machine#{idx}" do |machine|
+
+      machine.vm.provision :file, source: "../../files/code-server-settings.json",             destination: "/tmp/settings.json" if idx == 1
+      machine.vm.provision :file, source: "../../files/code-server-light-theme-settings.json", destination: "/tmp/settings.json" if idx == 2
+      machine.vm.provision :shell, path: "../../scripts/setup-code-server.sh"
+
+      ssh_host                     = "522#{'%02d' % idx}".to_i
+      http_host                    = "580#{'%02d' % idx}".to_i
+      http_non_root_host           = "581#{'%02d' % idx}".to_i
+      http_alternate_non_root_host = "582#{'%02d' % idx}".to_i
+      https_non_root_host          = "543#{'%02d' % idx}".to_i
+      haproxy_host                 = "590#{'%02d' % idx}".to_i
+      http_api_host                = "531#{'%02d' % idx}".to_i
+      control_gateway_host         = "532#{'%02d' % idx}".to_i
+
+      machine.ssh.port = ssh_host
+
+      machine.vm.provider "virtualbox" do |vm|
+        # this is for Jenkins
+        vm.memory = 2048 if idx == 1
+
+        vm.customize ['modifyvm', :id, '--nic1', 'bridged', '--bridgeadapter1', 'en0', '--nic2', 'nat']
+        vm.customize ['modifyvm', :id, '--natpf2', "ssh,tcp,127.0.0.1,#{ssh_host},,22"]
+        vm.customize ['modifyvm', :id, '--natpf2', "http,tcp,127.0.0.1,#{http_host},,80"]
+        vm.customize ['modifyvm', :id, '--natpf2', "http-non-root,tcp,127.0.0.1,#{http_non_root_host},,8000"]
+        vm.customize ['modifyvm', :id, '--natpf2', "http-alternate-non-root,tcp,127.0.0.1,#{http_alternate_non_root_host},,8080"]
+        vm.customize ['modifyvm', :id, '--natpf2', "https-non-root,tcp,127.0.0.1,#{https_non_root_host},,8443"]
+        vm.customize ['modifyvm', :id, '--natpf2', "haproxy,tcp,127.0.0.1,#{haproxy_host},,9000"]
+        vm.customize ['modifyvm', :id, '--natpf2', "http-api,tcp,127.0.0.1,#{http_api_host},,9631"]
+        vm.customize ['modifyvm'  , :id, '--natpf2', "ctl-gateway,tcp,127.0.0.1,#{control_gateway_host},,9632"]
+      end
+
+      machine.vm.network :forwarded_port, guest: 22,   adapter: 1, host: ssh_host
+      machine.vm.network :forwarded_port, guest: 80,   adapter: 1, host: http_host
+      machine.vm.network :forwarded_port, guest: 8000, adapter: 1, host: http_non_root_host
+      machine.vm.network :forwarded_port, guest: 8080, adapter: 1, host: http_alternate_non_root_host
+      machine.vm.network :forwarded_port, guest: 8443, adapter: 1, host: https_non_root_host
+      machine.vm.network :forwarded_port, guest: 9000, adapter: 1, host: haproxy_host
+      machine.vm.network :forwarded_port, guest: 9631, adapter: 1, host: http_api_host
+      machine.vm.network :forwarded_port, guest: 9632, adapter: 1, host: control_gateway_host
+    end
+
+  end
+
+end

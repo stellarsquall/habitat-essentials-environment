@@ -1,0 +1,54 @@
+{
+  "variables": {
+    "dest_ami_name": "habitat-workshop-{{ timestamp }}",
+    "ami_filter_name": "CentOS Linux 7 x86_64 HVM EBS ENA 1901*",
+    "ami_owner": "679593333241",
+    "aws_region": "us-east-1",
+    "dest_ami_regions": "us-east-1,us-west-1",
+    "access_key": "{{ env `AWS_ACCESS_KEY_ID` }}",
+    "secret_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
+    "aws_security_token": "{{ env `AWS_SECURITY_TOKEN` }}",
+    "hab_user_password": "habworkshop"
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "region": "{{ user `aws_region` }}",
+    "source_ami_filter": {
+      "filters": {
+        "name": "{{ user `ami_filter_name` }}"
+      },
+      "owners": ["{{ user `ami_owner` }}"],
+      "most_recent": true
+    },
+    "access_key": "{{ user `aws_access_key` }}",
+    "secret_key": "{{ user `aws_secret_key` }}",
+    "instance_type": "m4.large",
+    "ami_block_device_mappings": [{
+      "device_name": "/dev/sda1",
+      "volume_type": "gp2",
+      "delete_on_termination": true
+    }],
+    "ami_regions": "{{ user `dest_ami_regions` }}",
+    "ena_support": "true",
+    "force_deregister": "true",
+    "ssh_username": "centos",
+    "ssh_pty": true,
+    "ami_name": "{{ user `dest_ami_name` }}",
+    "ami_description": "Habitat Workshop Image Pre-Loaded with Habitat + Docker",
+    "tags": {
+      "X-Source-Ami": "{{ .SourceAMIName }}",
+      "X-Operating-System": "linux"
+    }
+  }],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "../scripts/provision.sh",
+      "environment_vars": ["HAB_USER_PASSWORD={{ user `hab_user_password` }}"]
+    },
+    {
+      "type": "shell",
+      "script": "../scripts/cloud-provision.sh"
+    }
+  ]
+}

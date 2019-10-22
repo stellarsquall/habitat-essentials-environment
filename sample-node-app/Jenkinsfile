@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    environment {
+        // Specify an organizational default at Configure Jenkins -> Global Properties -> Environment Variables
+        // This will override the Global Default and is useful to override per-repo or per-branch
+        HAB_BLDR_URL = "https://bldr.habitat.sh"
+
+        // This will be exported as an environment variable in "sh" steps, but will be censored in build output
+        HAB_AUTH_TOKEN = credentials('hab-depot-token')
+    }
+
+    stages {
+        stage('download-keys') {
+            steps {
+                sh "hab origin key download ${env.HAB_ORIGIN}"
+                sh "hab origin key download ${env.HAB_ORIGIN} --secret"
+            }
+        }
+        stage('build') {
+            steps {
+                // Note we can specify "workspace" in the directory argument of the habitat plugin call instead of using dir(), however, the results directory is
+                // created in the calling context, so if you use this alternate approach modify the upload/promote steps to match
+                dir(workspace) {
+                    habitat task: 'build', directory: '.', origin: env.HAB_ORIGIN, authToken: env.HAB_AUTH_TOKEN, bldrUrl: env.HAB_BLDR_URL
+                }
+            }
+        }
+        stage('upload') {
+            steps {
+                habitat task: 'upload', lastBuildFile: "${workspace}/results/last_build.env", authToken: env.HAB_AUTH_TOKEN, bldrUrl: env.HAB_BLDR_URL
+            }
+        }
+        stage('promote') {
+            // A build is done for every branch/PR depending on the Jenkins configuration, but a promotion to stage is only done on master
+            when { equals expected: 'master', actual: env.BRANCH_NAME }
+            steps {
+                habitat task: 'promote', channel: 'stage', lastBuildFile: "${workspace}/results/last_build.env", authToken: env.HAB_AUTH_TOKEN, bldrUrl: env.HAB_BLDR_URL
+            }
+        }
+    }
+}

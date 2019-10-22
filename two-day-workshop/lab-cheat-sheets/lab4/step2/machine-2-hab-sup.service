@@ -1,0 +1,9 @@
+[Unit]
+Description=Habitat Supervisor
+
+[Service]
+ExecStart=/bin/hab sup run \
+                           --listen-ctl 0.0.0.0:9632
+
+[Install]
+WantedBy=default.target

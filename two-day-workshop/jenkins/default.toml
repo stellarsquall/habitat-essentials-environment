@@ -1,0 +1,48 @@
+# Use this file to templatize your application's native configuration files.
+# See the docs at https://www.habitat.sh/docs/create-packages-configure/.
+# You can safely delete this file if you don't need it.
+[jenkins]
+prefix = "/"
+plugins = [
+  "git",
+  "github",
+  "token-macro",
+  "groovy",
+  "dashboard-view",
+  "blueocean",
+  "habitat"
+]
+
+[jenkins.session]
+timeout = 60
+
+[jenkins.http]
+enabled = true
+port = 80
+
+[jenkins.https]
+enabled = false
+port = 443
+
+[jenkins.http2]
+enabled = false
+port = 80
+
+[jenkins.ajp13]
+enabled = false
+port = 8009
+
+[java]
+opts = "-Xmn128M -Xms1024M -Xmx2048M -Djenkins.install.runSetupWizard=false"
+
+[jenkins.security]
+username = "admin"
+password = "admin"
+
+[jenkins.slave]
+port = 9999
+
+[[jenkins.credentials]]
+  id          = "hab-depot-token"
+  token       = "token"
+  description = "Habitat Depot Authentication Token"

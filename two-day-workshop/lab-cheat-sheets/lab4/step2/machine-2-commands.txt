@@ -1,0 +1,4 @@
+mv hab-sup.service /etc/systemd/system/hab-sup.service
+
+sudo systemctl daemon-reload
+sudo systemctl restart hab-sup

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+exec node \
+  {{ pkg.path }}/app/index.js \
+  {{ pkg.svc_config_path }}/config.json \
+  2>&1
